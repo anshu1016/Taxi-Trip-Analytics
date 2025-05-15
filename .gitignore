@@ -1,0 +1,12 @@
+# .gitignore
+__pycache__/
+.env
+node_modules/
+*.log
+.parquet
+*.csv
+.DS_Store
+
+~/.aws/credentials
+backend/myvenv
+frontend/node_modules
