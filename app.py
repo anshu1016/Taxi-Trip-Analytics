@@ -27,10 +27,8 @@
 
 # print(f"✅ NYC zone data uploaded to s3://{BUCKET_NAME}/{S3_KEY}")
 
-
 import boto3
 import pandas as pd
-import json
 from io import StringIO
 import logging
 from botocore.exceptions import ClientError
@@ -38,44 +36,44 @@ from botocore.exceptions import ClientError
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def convert_json_to_csv(bucket_name, json_key, csv_key):
+def process_csv_from_s3(bucket_name, csv_key, output_csv_key):
     try:
-        logging.info("Starting the JSON to CSV conversion process.")
+        logging.info("Starting the CSV processing pipeline.")
 
         # Initialize S3 client
         s3 = boto3.client('s3')
         logging.info("Connected to S3.")
 
-        # Step 1: Read JSON file from S3
-        logging.info(f"Reading JSON file from s3://{bucket_name}/{json_key}")
-        obj = s3.get_object(Bucket=bucket_name, Key=json_key)
-        json_data = json.load(obj['Body'])
+        # Step 1: Read CSV file from S3
+        logging.info(f"Reading CSV file from s3://{bucket_name}/{csv_key}")
+        obj = s3.get_object(Bucket=bucket_name, Key=csv_key)
+        body = obj['Body'].read().decode('utf-8')
+
+        print("First 500 chars:", body[:500])  # Optional preview
 
         # Step 2: Convert to DataFrame
-        logging.info("Converting JSON to DataFrame.")
-        df = pd.DataFrame(json_data)
+        df = pd.read_csv(StringIO(body))
         logging.info(f"DataFrame created with {len(df)} rows and {len(df.columns)} columns.")
 
-        # Step 3: Convert DataFrame to CSV
-        logging.info("Converting DataFrame to CSV format.")
+        # Step 3: Optionally modify DataFrame here
+        # For example: df = df.dropna() or df = df.head(100)
+
+        # Step 4: Upload cleaned CSV to S3
+        logging.info(f"Uploading processed CSV to s3://{bucket_name}/{output_csv_key}")
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False)
+        s3.put_object(Bucket=bucket_name, Key=output_csv_key, Body=csv_buffer.getvalue())
 
-        # Step 4: Upload CSV to S3
-        logging.info(f"Uploading CSV to s3://{bucket_name}/{csv_key}")
-        s3.put_object(Bucket=bucket_name, Key=csv_key, Body=csv_buffer.getvalue())
-
-        logging.info("CSV file uploaded successfully.")
+        logging.info("Processed CSV uploaded successfully.")
 
     except ClientError as e:
         logging.error(f"ClientError: {e}")
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
 
-# Replace these with your actual paths
+# Replace with your values
 bucket_name = 'nycc-taxi-raw-data'
-json_key = 'yellow_tripdata/nyc_zone_data_2025-05-15_19-03-23.json'  # <-- update this
-csv_key = 'yellow_tripdata/converted_nyc_zone_2025-05-15_19-03-23.csv'
+csv_key = 'yellow_tripdata/nyc_zone_data_2025-05-16_17-39-50.json'  # despite the .json, it's CSV
+output_csv_key = 'yellow_tripdata/nyc_zone_data_cleaned.csv'
 
-# Run the function
-convert_json_to_csv(bucket_name, json_key, csv_key)
+process_csv_from_s3(bucket_name, csv_key, output_csv_key)

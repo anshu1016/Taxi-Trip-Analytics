@@ -1,3 +1,7 @@
 flask
 boto3
 pandas
+scikit-learn
+xgboost
+joblib
+pyathena
