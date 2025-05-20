@@ -22,7 +22,7 @@ sklearn_estimator = SKLearn(
 
 # Input data configuration
 train_input = sagemaker.inputs.TrainingInput(
-    s3_data=f"s3://{bucket}/cleaned/yellow_tripdata_2024.csv",
+    s3_data=f"s3://{bucket}/cleaned/yellow_tripdata_.csv",
     content_type="text/csv"
 )
 
