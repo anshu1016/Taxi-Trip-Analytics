@@ -10,3 +10,5 @@ node_modules/
 ~/.aws/credentials
 backend/myvenv
 frontend/node_modules
+
+backend/.env

@@ -2,11 +2,16 @@ import sagemaker
 from sagemaker.sklearn.model import SKLearnModel
 from sagemaker.session import Session
 import boto3
+from dotenv import load_dotenv
+import os
+
+# Load variables from .env
+load_dotenv()
 
 boto_session = boto3.Session(region_name="us-east-1")
 sagemaker_session = Session(boto_session=boto_session)
 
-role = "arn:aws:iam::622025528920:role/service-role/AWSGlueServiceRole-NYCTaxi"  # ← Replace this with your SageMaker IAM Role ARN
+role = os.getenv('SagemakerARN')
 
 model = SKLearnModel(
     model_data="s3://nycc-taxi-processed-data/deploy/model.tar.gz",  # ← tar.gz now
